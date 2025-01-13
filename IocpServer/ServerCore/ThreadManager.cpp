@@ -13,29 +13,24 @@ ThreadManager::~ThreadManager()
 
 void ThreadManager::Launch(function<void(void)> callback)
 {
-	lock_guard<mutex> lock(_lock);
+	scoped_lock<mutex> lock(_lock);
 
-	_threads.emplace_back(thread([=]() {
+	_threads.emplace_back([this, callback]() {
 		InitTLS();
 		callback();
 		DestroyTLS();
-		}));
+		});
 }
 
 void ThreadManager::Join()
 {
-	for (thread& t : _threads)
-	{
-		if (t.joinable())
-
-			t.join();
-	}
+	_threads.clear();
 }
 
 void ThreadManager::InitTLS()
 {
 	static atomic<uint32> s_ThreadId = 1;
-	LThreadId = s_ThreadId.fetch_add(1);
+	LThreadId = s_ThreadId++;
 }
 
 void ThreadManager::DestroyTLS()

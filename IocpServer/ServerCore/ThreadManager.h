@@ -17,6 +17,6 @@ public:
 
 private:
 	mutex	_lock;
-	vector<thread> _threads;
+	vector<jthread> _threads;
 };
 
