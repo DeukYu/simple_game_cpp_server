@@ -1,1 +1,7 @@
-﻿  DummyClient.vcxproj -> C:\Users\ldy80\OneDrive\바탕 화면\github\simple_game_cpp_server\IocpServer\x64\Debug\DummyClient.exe
+﻿  DummyClient.cpp
+  pch.cpp
+  코드를 생성하고 있습니다...
+  LINK : C:\Users\ldy80\OneDrive\바탕 화면\github\simple_game_cpp_server\IocpServer\x64\Debug\DummyClient.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
+pch.obj : error LNK2005: "class CoreGlobal GCoreGlobal" (?GCoreGlobal@@3VCoreGlobal@@A)이(가) DummyClient.obj에 이미 정의되어 있습니다.
+ServerCore.lib(pch.obj) : error LNK2005: "class CoreGlobal GCoreGlobal" (?GCoreGlobal@@3VCoreGlobal@@A)이(가) DummyClient.obj에 이미 정의되어 있습니다.
+C:\Users\ldy80\OneDrive\바탕 화면\github\simple_game_cpp_server\IocpServer\x64\Debug\DummyClient.exe : fatal error LNK1169: 여러 번 정의된 기호가 있습니다.

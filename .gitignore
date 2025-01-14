@@ -30,3 +30,49 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio 관련 디렉터리
+.vs/
+
+# 빌드 결과물
+*.exe
+*.dll
+*.obj
+*.pch
+*.idb
+*.pdb
+*.ilk
+*.lib
+*.tlb
+*.tli
+*.log
+
+# 중간 빌드 파일
+*.tlog
+*.tmp
+*.cache
+*.csproj.user
+*.vcxproj.user
+*.ipch
+
+# 빌드 아티팩트
+build/
+Debug/
+Release/
+x64/
+x86/
+
+# CMake 관련
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# 기타
+*.suo
+*.user
+*.filters
+*.log
+*.swp
+*.Directory.Build.props
+*.Directory.Build.targets

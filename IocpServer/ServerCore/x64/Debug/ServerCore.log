@@ -1,2 +1,7 @@
-﻿  ThreadManager.cpp
+﻿  pch.cpp
+  CoreGlobal.cpp
+  CorePch.cpp
+  CoreTLS.cpp
+  ThreadManager.cpp
+  코드를 생성하고 있습니다...
   ServerCore.vcxproj -> C:\Users\ldy80\OneDrive\바탕 화면\github\simple_game_cpp_server\IocpServer\Lib\Debug\ServerCore.lib
