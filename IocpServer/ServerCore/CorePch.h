@@ -13,7 +13,12 @@
 #include <stack>
 #include <unordered_set>
 #include <unordered_map>
+#include <optional>
+#include <memory_resource>
 
 #include <iostream>
 
 using namespace std;
+
+#include "ObjectPool.h"
+#include "TypeCast.h"

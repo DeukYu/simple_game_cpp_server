@@ -1,7 +1,7 @@
 #pragma once
 #include <mutex>
-#include <atomic>
 #include <shared_mutex>
+#include <atomic>
 
 using BYTE = unsigned char;
 
