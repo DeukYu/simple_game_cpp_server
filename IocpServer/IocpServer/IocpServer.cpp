@@ -3,65 +3,78 @@
 #include <iostream>
 #include "ThreadManager.h"
 
-struct TestObject
-{
-	int x;
-	TestObject() {}
-	TestObject(int value) : x(value) { std::cout << "Constructed: " << x << "\n"; }
-	~TestObject() { std::cout << "Destructed: " << x << "\n"; }
-};
-
-void SingleThreadTest()
-{
-	std::cout << "=== Single Thread Test ===\n";
-
-	TestObject* obj1 = ObjectPool<TestObject>::Pop(10);
-	std::cout << "Value: " << obj1->x << "\n";
-
-	ObjectPool<TestObject>::Push(obj1);
-
-	auto sharedObj = ObjectPool<TestObject>::MakeShared();
-	sharedObj->x = 20;
-	std::cout << "Shared Value: " << sharedObj->x << "\n";
-}
-
-void MultiThreadTest()
-{
-	std::cout << "=== Multi Thread Test ===\n";
-
-	for (int32 i = 0; i < 5; ++i)
-	{
-		GThreadManager->Launch([=]() {
-			TestObject* obj = ObjectPool<TestObject>::Pop(i);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			ObjectPool<TestObject>::Push(obj);
-			});
-	}
-	GThreadManager->Join();
-}
-
-void ReuseTest()
-{
-	std::cout << "=== Reuse Test ===\n";
-
-	auto obj1 = ObjectPool<TestObject>::Pop(30);
-	auto obj2 = ObjectPool<TestObject>::Pop(40);
-
-	ObjectPool<TestObject>::Push(obj1);
-	ObjectPool<TestObject>::Push(obj2);
-
-	auto obj3 = ObjectPool<TestObject>::Pop(50); // Should reuse obj1's memory
-	std::cout << "Reused Value: " << obj3->x << "\n";
-
-	ObjectPool<TestObject>::Push(obj3);
-}
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <MSWSock.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
 
 int main()
 {
+	WSADATA wsaData;
+	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+		return 0;
 
-	SingleThreadTest();
+	SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (listenSocket == INVALID_SOCKET)
+	{
+		int32 errCode = WSAGetLastError();
+		cout << "Socket ErrorCode : " << errCode << endl;
+		return 0;
+	}
 
-	MultiThreadTest();
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+	serverAddr.sin_port = htons(9000);
 
-	ReuseTest();
+	if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)))
+	{
+		int32 errCode = WSAGetLastError();
+		cout << "Bind ErrorCode : " << errCode << endl;
+		return 0;
+	}
+
+	if (::listen(listenSocket, 10) == SOCKET_ERROR)
+	{
+		int32 errCode = WSAGetLastError();
+		cout << "Listen ErrorCode : " << errCode << endl;
+		return 0;
+	}
+
+	while (true)
+	{
+		SOCKADDR_IN clientAddr;
+		::memset(&clientAddr, 0, sizeof(clientAddr));
+		int32 addrLen = sizeof(clientAddr);
+		SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+		if (clientSocket == INVALID_SOCKET)
+		{
+			int32 errCode = WSAGetLastError();
+			cout << "Accept ErrorCode : " << errCode << endl;
+			break;
+		}
+
+		char ipAddress[16];
+		::inet_ntop(AF_INET, &clientAddr.sin_addr, ipAddress, sizeof(ipAddress));
+		cout << "Client Connected : " << ipAddress << endl;
+
+		while (true)
+		{
+			char recvBuffer[1000];
+			int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			if (recvLen <= SOCKET_ERROR)
+			{
+				int32 errCode = WSAGetLastError();
+				cout << "Recv ErrorCode : " << errCode << endl;
+				break;
+			}
+			cout << "Recv Data : " << recvBuffer << endl;
+			cout << "Recv Data Len : " << recvLen << endl;
+		}
+
+	}
+	::WSACleanup();
 }
