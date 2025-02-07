@@ -17,8 +17,14 @@
 #include <memory_resource>
 
 #include <iostream>
-
 using namespace std;
+
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <MSWSock.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
 
 #include "ObjectPool.h"
 #include "TypeCast.h"
