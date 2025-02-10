@@ -8,23 +8,23 @@ public:
 	static LPFN_DISCONNECTEX DisconnectEx;
 	static LPFN_ACCEPTEX AcceptEx;
 public:
-	static void Init();
-	static void Clear();
+	static bool Init();
+	static bool Clear();
 
 	static bool BindWindowsFunction(SOCKET socket, GUID guid, LPVOID* fn);
 	static SOCKET CreateSocket();
 
-	static bool SetLinger(SOCKET socket, bool onOff, uint16 lingerTime);
-	static bool SetReUseAddress(SOCKET socket, bool onOff);
+	static bool SetLinger(SOCKET socket, const bool onOff, uint16 lingerTime);
+	static bool SetReUseAddress(SOCKET socket, const bool onOff);
 	static bool SetRecvBufferSize(SOCKET socket, int32 size);
 	static bool SetSendBufferSize(SOCKET socket, int32 size);
-	static bool SetTcpNoDelay(SOCKET socket, bool flag);
+	static bool SetTcpNoDelay(SOCKET socket, const bool flag);
 	static bool SetUpdateAcceptSocket(SOCKET socket, SOCKET listenSocket);
 
 	static bool Bind(SOCKET socket, NetAddress address);
 	static bool BindAnyAddress(SOCKET socket, uint16 port);
 	static bool Listen(SOCKET socket, int32 backLog = SOMAXCONN);
-	static void Close(SOCKET socket);
+	static void Close(SOCKET& socket);
 };
 
 template<typename T>
