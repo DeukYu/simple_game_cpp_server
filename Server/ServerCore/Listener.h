@@ -1,7 +1,8 @@
 #pragma once
 #include "IocpCore.h"
 #include "NetAddress.h"
-#include "IocpEvent.h"
+
+class AcceptEvent;
 
 class Listener : public IocpObject
 {
@@ -15,7 +16,7 @@ public: /* 외부에서 사용 */
 
 public: /* 인터페이스 구현 */
 	virtual HANDLE GetHandle() override;
-	virtual void Dispatch(class IocpEvent* iocpEvent, int32 numOfBytes) override;
+	virtual void Dispatch(class IocpEvent* iocpEvent, int32 numOfBytes = 0) override;
 
 private: /* 수신 관련 */
 	void RegisterAccept(AcceptEvent* acceptEvent);

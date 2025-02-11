@@ -9,12 +9,12 @@
 
 int main()
 {
-	Listener listener;
-	listener.StartAccept(NetAddress("127.0.0.1", 7777));
+	shared_ptr<Listener> listener = make_shared<Listener>();
+	listener->StartAccept(NetAddress("127.0.0.1", 7777));
 
 	for (int i = 0; i < 5; ++i)
 	{
-		GThreadManager->Launch([]()
+		GThreadManager->Launch([=]()
 			{
 				while (true)
 				{

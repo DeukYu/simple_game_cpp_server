@@ -51,6 +51,7 @@ bool Listener::StartAccept(const NetAddress& address)
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		AcceptEvent* acceptEvent = new AcceptEvent();
+		acceptEvent->m_owner = shared_from_this();
 		_acceptEvents.push_back(acceptEvent);
 		RegisterAccept(acceptEvent);
 	}
@@ -70,7 +71,7 @@ HANDLE Listener::GetHandle()
 
 void Listener::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 {
-	if (iocpEvent->GetType() != IOCP_IO_TYPE::Accept)
+	if (iocpEvent->m_eventType != IOCP_IO_TYPE::Accept)
 	{
 		return;
 	}
@@ -81,32 +82,26 @@ void Listener::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 
 void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 {
-	Session* session = new Session();
+	shared_ptr<Session> session = make_shared<Session>();
 
 	acceptEvent->Init();
-	acceptEvent->SetSession(session);
+	acceptEvent->m_session = session;
 
 	DWORD bytesReceived = 0;
 	if (false == SocketUtils::AcceptEx(_socket, session->GetSocket(), session->_recvBuffer, 0,
 		sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16,
 		OUT & bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
-		const int32 errorCode = WSAGetLastError();
-		if (errorCode != WSA_IO_PENDING)
+		if (WSAGetLastError() != WSA_IO_PENDING)
 		{
-			// ´Ù½Ã Accept
 			RegisterAccept(acceptEvent);
 		}
-	}
-	else
-	{
-		GIocpCore.Register(session);
 	}
 }
 
 void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 {
-	Session* session = acceptEvent->GetSession();
+	shared_ptr<Session> session = acceptEvent->m_session;
 	
 	if (false == SocketUtils::SetUpdateAcceptSocket(session->GetSocket(), _socket))
 	{
@@ -116,7 +111,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 
 	SOCKADDR_IN sockAddress;
 	int32 sizeOfSockAddr = sizeof(sockAddress);
-	if (SOCKET_ERROR == getpeername(session->GetSocket(), reinterpret_cast<SOCKADDR*>(&sockAddress), OUT & sizeOfSockAddr))
+	if (SOCKET_ERROR == getpeername(session->GetSocket(), OUT reinterpret_cast<SOCKADDR*>(&sockAddress), & sizeOfSockAddr))
 	{
 		RegisterAccept(acceptEvent);
 		return;

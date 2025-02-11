@@ -2,12 +2,12 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 
-IocpCore GlobalCore;
+IocpCore GIocpCore;
 
 IocpCore::IocpCore()
 {
-	_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
-	if (_iocpHandle != INVALID_HANDLE_VALUE)
+	_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	if (_iocpHandle == NULL)
 	{
 		throw runtime_error("Failed to create IOCP handle");
 	}
@@ -26,12 +26,13 @@ bool IocpCore::Register(IocpObject* iocpObject)
 bool IocpCore::Dispatch(uint32 timeoutMs)
 {
 	DWORD numOfBytes = 0;
-	IocpObject* iocpObject = nullptr;
+	ULONG_PTR key = 0;
 	IocpEvent* iocpEvent = nullptr;
 
-	if (GetQueuedCompletionStatus(_iocpHandle, OUT & numOfBytes, OUT reinterpret_cast<PULONG_PTR>(&iocpObject),
+	if (GetQueuedCompletionStatus(_iocpHandle, OUT & numOfBytes, OUT &key,
 		OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs))
 	{
+		shared_ptr<IocpObject> iocpObject = iocpEvent->m_owner;
 		iocpObject->Dispatch(iocpEvent, numOfBytes);
 	}
 	else
@@ -42,6 +43,7 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 			return false;
 		default:
 			// TODO : ·Î±× Âï±â
+			shared_ptr<IocpObject> iocpObject = iocpEvent->m_owner;
 			iocpObject->Dispatch(iocpEvent, numOfBytes);
 			break;
 		}

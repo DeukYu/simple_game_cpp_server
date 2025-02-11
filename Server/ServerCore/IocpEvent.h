@@ -1,6 +1,7 @@
 #pragma once
+#include "IocpCore.h"
 
-class Session; 
+class Session;
 
 enum class IOCP_IO_TYPE : uint8
 {
@@ -16,10 +17,10 @@ public:
 	IocpEvent(IOCP_IO_TYPE type);
 
 	void Init();
-	IOCP_IO_TYPE GetType() const { return _type; }
 
-protected:
-	IOCP_IO_TYPE _type;
+public:
+	IOCP_IO_TYPE m_eventType;
+	shared_ptr<IocpObject> m_owner;
 };
 
 class ConnectEvent : public IocpEvent
@@ -33,10 +34,8 @@ class AcceptEvent : public IocpEvent
 public:
 	AcceptEvent() : IocpEvent(IOCP_IO_TYPE::Accept) {}
 
-	void SetSession(Session* session) { _session = session; }
-	Session* GetSession() const { return _session; }
-private:
-	Session* _session = nullptr;
+public:
+	shared_ptr<Session> m_session = nullptr;
 };
 
 class RecvEvent : public IocpEvent
