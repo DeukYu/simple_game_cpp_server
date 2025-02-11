@@ -15,12 +15,9 @@ public:
 
 	HANDLE GetHandle() const { return _iocpHandle; }
 
-	bool Register(class IocpObject* iocpObject);
+	bool Register(shared_ptr<IocpObject> iocpObject);
 	bool Dispatch(uint32 timeoutMs = INFINITE);
 
 private:
 	HANDLE _iocpHandle;
 };
-
-// TODO : TEMP
-extern IocpCore GIocpCore;

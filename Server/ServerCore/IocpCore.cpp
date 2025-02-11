@@ -2,8 +2,6 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 
-IocpCore GIocpCore;
-
 IocpCore::IocpCore()
 {
 	_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -18,9 +16,9 @@ IocpCore::~IocpCore()
 	CloseHandle(_iocpHandle);
 }
 
-bool IocpCore::Register(IocpObject* iocpObject)
+bool IocpCore::Register(shared_ptr<IocpObject> iocpObject)
 {
-	return CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, reinterpret_cast<ULONG_PTR>(iocpObject), 0);
+	return CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, 0, 0);
 }
 
 bool IocpCore::Dispatch(uint32 timeoutMs)

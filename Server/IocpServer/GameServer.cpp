@@ -3,14 +3,18 @@
 #include <iostream>
 #include "ThreadManager.h"
 
-
-#include "SocketUtils.h"
-#include "Listener.h"
+#include "Service.h"
+#include "Session.h"
 
 int main()
 {
-	shared_ptr<Listener> listener = make_shared<Listener>();
-	listener->StartAccept(NetAddress("127.0.0.1", 7777));
+	shared_ptr<ServerService> service = make_shared<ServerService>(
+		NetAddress("127.0.0.1", 7777), 
+		make_shared<IocpCore>(), 
+		[]() {return make_shared<Session>(); },
+		100);
+	
+	service->Start();
 
 	for (int i = 0; i < 5; ++i)
 	{
@@ -18,7 +22,7 @@ int main()
 			{
 				while (true)
 				{
-					GIocpCore.Dispatch();
+					service->GetIocpCore()->Dispatch();
 				}
 			});
 	}
