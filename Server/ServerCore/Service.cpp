@@ -21,6 +21,8 @@ shared_ptr<Session> Service::CreateSession()
 {
 	shared_ptr<Session> session = mSessionFactory();
 
+	session->SetService(shared_from_this());
+
 	if (mIocpCore->Register(session) == false)
 		return nullptr;
 
@@ -37,6 +39,7 @@ void Service::AddSession(shared_ptr<Session> session)
 void Service::ReleaseSession(shared_ptr<Session> session)
 {
 	unique_lock<shared_mutex> lock(mLock);
-	mSessionCount--;
+	
 	mSessions.erase(session);
+	mSessionCount--;
 }

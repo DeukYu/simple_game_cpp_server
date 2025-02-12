@@ -95,7 +95,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 	acceptEvent->m_session = session;
 
 	DWORD bytesReceived = 0;
-	if (false == SocketUtils::AcceptEx(mSocket, session->GetSocket(), session->_recvBuffer, 0,
+	if (false == SocketUtils::AcceptEx(mSocket, session->GetSocket(), session->mRecvBuffer, 0,
 		sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16,
 		OUT & bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
@@ -125,8 +125,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 	}
 
 	session->SetNetAddress(NetAddress(sockAddress));
-
-	cout << "Client Connected!" << endl;
+	session->ProcessConnect();
 
 	RegisterAccept(acceptEvent);
 }
