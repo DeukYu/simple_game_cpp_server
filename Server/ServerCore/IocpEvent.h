@@ -3,10 +3,11 @@
 
 class Session;
 
-enum class IOCP_IO_TYPE : uint8
+enum class eEventType : uint8
 {
-	Connect,
 	Accept,
+	Connect,
+	DisConnect,
 	Recv,
 	Send,
 };
@@ -14,37 +15,43 @@ enum class IOCP_IO_TYPE : uint8
 class IocpEvent : public OVERLAPPED
 {
 public:
-	IocpEvent(IOCP_IO_TYPE type);
+	IocpEvent(eEventType type);
 
 	void Init();
 
 public:
-	IOCP_IO_TYPE m_eventType;
-	shared_ptr<IocpObject> m_owner;
-};
-
-class ConnectEvent : public IocpEvent
-{
-public:
-	ConnectEvent() : IocpEvent(IOCP_IO_TYPE::Connect) {}
+	eEventType mEventType;
+	shared_ptr<IocpObject> mOwner;
 };
 
 class AcceptEvent : public IocpEvent
 {
 public:
-	AcceptEvent() : IocpEvent(IOCP_IO_TYPE::Accept) {}
+	AcceptEvent() : IocpEvent(eEventType::Accept) {}
 
 public:
 	shared_ptr<Session> m_session = nullptr;
 };
 
+class ConnectEvent : public IocpEvent
+{
+public:
+	ConnectEvent() : IocpEvent(eEventType::Connect) {}
+};
+
+class DisConnectEvent : public IocpEvent
+{
+public:
+	DisConnectEvent() : IocpEvent(eEventType::DisConnect) {}
+};
+
 class RecvEvent : public IocpEvent
 {
 public:
-	RecvEvent() : IocpEvent(IOCP_IO_TYPE::Recv) {}
+	RecvEvent() : IocpEvent(eEventType::Recv) {}
 };
 
 class SendEvent : public IocpEvent
 {
-	SendEvent() : IocpEvent(IOCP_IO_TYPE::Send) {}
+	SendEvent() : IocpEvent(eEventType::Send) {}
 };

@@ -3,13 +3,13 @@
 #include "SocketUtils.h"
 #include "IocpEvent.h"
 #include "Session.h"
-#include "Service.h"
+#include "ServerService.h"
 
 Listener::~Listener()
 {
-	SocketUtils::Close(_socket);
+	CloseSocket();
 
-	for (auto acceptEvent : _acceptEvents)
+	for (auto acceptEvent : mAcceptEvents)
 	{
 		delete(acceptEvent);
 	}
@@ -17,49 +17,49 @@ Listener::~Listener()
 
 bool Listener::StartAccept(shared_ptr<ServerService> service)
 {
-	_service = service;
-	if (_service == nullptr)
+	mService = service;
+	if (mService == nullptr)
 	{
 		return false;
 	}
 
-	_socket = SocketUtils::CreateSocket();
-	if (_socket == INVALID_SOCKET)
+	mSocket = SocketUtils::CreateSocket();
+	if (mSocket == INVALID_SOCKET)
 	{
 		return false;
 	}
 
-	if (_service->GetIocpCore()->Register(shared_from_this()) == false)
+	if (mService->GetIocpCore()->Register(shared_from_this()) == false)
 	{
 		return false;
 	}
 
-	if (SocketUtils::SetReUseAddress(_socket, true) == false)
+	if (SocketUtils::SetReUseAddress(mSocket, true) == false)
 	{
 		return false;
 	}
 
-	if (SocketUtils::SetLinger(_socket, true, 0) == false)
+	if (SocketUtils::SetLinger(mSocket, true, 0) == false)
 	{
 		return false;
 	}
 
-	if (SocketUtils::Bind(_socket, _service->GetAddress()) == false)
+	if (SocketUtils::Bind(mSocket, mService->GetAddress()) == false)
 	{
 		return false;
 	}
 
-	if (SocketUtils::Listen(_socket) == false)
+	if (SocketUtils::Listen(mSocket) == false)
 	{
 		return false;
 	}
 
-	const int32 acceptCount = _service->GetMaxSessionCount();
+	const int32 acceptCount = mService->GetMaxSessionCount();
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		AcceptEvent* acceptEvent = new AcceptEvent();
-		acceptEvent->m_owner = shared_from_this();
-		_acceptEvents.push_back(acceptEvent);
+		acceptEvent->mOwner = shared_from_this();
+		mAcceptEvents.push_back(acceptEvent);
 		RegisterAccept(acceptEvent);
 	}
 
@@ -68,17 +68,17 @@ bool Listener::StartAccept(shared_ptr<ServerService> service)
 
 void Listener::CloseSocket()
 {
-	SocketUtils::Close(_socket);
+	SocketUtils::Close(mSocket);
 }
 
 HANDLE Listener::GetHandle()
 {
-	return reinterpret_cast<HANDLE>(_socket);
+	return reinterpret_cast<HANDLE>(mSocket);
 }
 
 void Listener::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 {
-	if (iocpEvent->m_eventType != IOCP_IO_TYPE::Accept)
+	if (iocpEvent->mEventType != eEventType::Accept)
 	{
 		return;
 	}
@@ -89,13 +89,13 @@ void Listener::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 
 void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 {
-	shared_ptr<Session> session = _service->CreateSession();	// Register IOCP
+	shared_ptr<Session> session = mService->CreateSession();	// Register IOCP
 
 	acceptEvent->Init();
 	acceptEvent->m_session = session;
 
 	DWORD bytesReceived = 0;
-	if (false == SocketUtils::AcceptEx(_socket, session->GetSocket(), session->_recvBuffer, 0,
+	if (false == SocketUtils::AcceptEx(mSocket, session->GetSocket(), session->_recvBuffer, 0,
 		sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16,
 		OUT & bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
@@ -110,7 +110,7 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 {
 	shared_ptr<Session> session = acceptEvent->m_session;
 	
-	if (false == SocketUtils::SetUpdateAcceptSocket(session->GetSocket(), _socket))
+	if (false == SocketUtils::SetUpdateAcceptSocket(session->GetSocket(), mSocket))
 	{
 		RegisterAccept(acceptEvent);
 		return;

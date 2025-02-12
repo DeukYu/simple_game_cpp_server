@@ -4,8 +4,8 @@
 
 IocpCore::IocpCore()
 {
-	_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	if (_iocpHandle == NULL)
+	mIocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	if (mIocpHandle == NULL)
 	{
 		throw runtime_error("Failed to create IOCP handle");
 	}
@@ -13,12 +13,12 @@ IocpCore::IocpCore()
 
 IocpCore::~IocpCore()
 {
-	CloseHandle(_iocpHandle);
+	CloseHandle(mIocpHandle);
 }
 
 bool IocpCore::Register(shared_ptr<IocpObject> iocpObject)
 {
-	return CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, 0, 0);
+	return CreateIoCompletionPort(iocpObject->GetHandle(), mIocpHandle, 0, 0);
 }
 
 bool IocpCore::Dispatch(uint32 timeoutMs)
@@ -27,10 +27,10 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 	ULONG_PTR key = 0;
 	IocpEvent* iocpEvent = nullptr;
 
-	if (GetQueuedCompletionStatus(_iocpHandle, OUT & numOfBytes, OUT &key,
+	if (GetQueuedCompletionStatus(mIocpHandle, OUT & numOfBytes, OUT &key,
 		OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs))
 	{
-		shared_ptr<IocpObject> iocpObject = iocpEvent->m_owner;
+		shared_ptr<IocpObject> iocpObject = iocpEvent->mOwner;
 		iocpObject->Dispatch(iocpEvent, numOfBytes);
 	}
 	else
@@ -40,12 +40,11 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 		{case WAIT_TIMEOUT:
 			return false;
 		default:
-			// TODO : ·Î±× Âï±â
-			shared_ptr<IocpObject> iocpObject = iocpEvent->m_owner;
+			shared_ptr<IocpObject> iocpObject = iocpEvent->mOwner;
 			iocpObject->Dispatch(iocpEvent, numOfBytes);
 			break;
 		}
 	}
 
-	return false;
+	return true;
 }

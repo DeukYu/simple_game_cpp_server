@@ -1,29 +1,29 @@
 #include "pch.h"
 #include "NetAddress.h"
 
-NetAddress::NetAddress(SOCKADDR_IN sockAddr) : _sockAddr(sockAddr)
+NetAddress::NetAddress(SOCKADDR_IN sockAddr) : mSockAddr(sockAddr)
 {
 }
 
 NetAddress::NetAddress(const string& ip, uint16 port)
 {
-	memset(&_sockAddr, 0, sizeof(_sockAddr));
+	memset(&mSockAddr, 0, sizeof(mSockAddr));
 
-	_sockAddr.sin_family = AF_INET;
-	_sockAddr.sin_addr = Ip2Address(ip);
-	_sockAddr.sin_port = htons(port);
+	mSockAddr.sin_family = AF_INET;
+	mSockAddr.sin_addr = Ip2Address(ip);
+	mSockAddr.sin_port = htons(port);
 }
 
 string NetAddress::GetIpAddress() const
 {
 	char ipAddr[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &_sockAddr.sin_addr, ipAddr, sizeof(ipAddr));
+	inet_ntop(AF_INET, &mSockAddr.sin_addr, ipAddr, sizeof(ipAddr));
 	return string(ipAddr);
 }
 
 uint16 NetAddress::GetPort() const
 {
-	return ntohs(_sockAddr.sin_port);
+	return ntohs(mSockAddr.sin_port);
 }
 
 IN_ADDR NetAddress::Ip2Address(const string& ip)
