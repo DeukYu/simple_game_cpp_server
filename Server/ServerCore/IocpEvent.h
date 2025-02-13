@@ -7,7 +7,7 @@ enum class eEventType : uint8
 {
 	Accept,
 	Connect,
-	DisConnect,
+	Disconnect,
 	Recv,
 	Send,
 };
@@ -39,10 +39,10 @@ public:
 	ConnectEvent() : IocpEvent(eEventType::Connect) {}
 };
 
-class DisConnectEvent : public IocpEvent
+class DisconnectEvent : public IocpEvent
 {
 public:
-	DisConnectEvent() : IocpEvent(eEventType::DisConnect) {}
+	DisconnectEvent() : IocpEvent(eEventType::Disconnect) {}
 };
 
 class RecvEvent : public IocpEvent
@@ -53,5 +53,8 @@ public:
 
 class SendEvent : public IocpEvent
 {
+public:
 	SendEvent() : IocpEvent(eEventType::Send) {}
+
+	vector<byte> mBuffer;
 };

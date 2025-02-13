@@ -8,7 +8,7 @@ public:
 	NetAddress(const string& ip, uint16 port);
 
 public:
-	SOCKADDR_IN* GetSockAddr() { return &mSockAddr; }
+	SOCKADDR_IN& GetSockAddr() { return mSockAddr; }
 	string GetIpAddress() const;
 	uint16 GetPort() const;
 

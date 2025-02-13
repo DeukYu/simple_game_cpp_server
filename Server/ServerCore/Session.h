@@ -15,7 +15,9 @@ public:
 	Session();
 	virtual ~Session();
 
-public:
+public: /* 외부에서 사용 */
+	void Send(byte* buffer, int32 len);
+	bool Connect();
 	void DisConnect(string_view cause);
 
 	shared_ptr<Service> GetService() { return mService.lock(); }
@@ -33,24 +35,26 @@ public: /* 인터페이스 구현 */
 	virtual void	Dispatch(class IocpEvent* iocpEvent, int32 numOfBytes) override;
 
 private: /* 전송 관련 */
-	void RegisterConnect();
+	bool RegisterConnect();
+	bool RegisterDisconnect();
 	void RegisterRecv();
-	void RegisterSend();
+	void RegisterSend(SendEvent* sendEvent);
 
 	void ProcessConnect();
+	void ProcessDisconnect();
 	void ProcessRecv(int32 numOfBytes);
-	void ProcessSend(int32 numOfBytes);
+	void ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
 
 	void HandleError(int32 errCode);
 
-protected:	/* 컨텐츠 코드에서 오버로딩 */
+protected:	/* 컨텐츠 코드에서 재정의 */
 	virtual void OnConnected() {}
-	virtual int32 OnRecv(BYTE* buffer, int32 len) { return len; }
+	virtual int32 OnRecv(byte* buffer, int32 len) { return len; }
 	virtual void OnSend(int32 len) {}
 	virtual void OnDisconnect() {}
 
 public:
-	char mRecvBuffer[1024];
+	byte mRecvBuffer[1024];
 
 private:
 	weak_ptr<Service> mService;
@@ -62,6 +66,8 @@ private:
 	shared_mutex mLock;
 
 private:
+	ConnectEvent mConnectEvent;
+	DisconnectEvent mDisconnectEvent;
 	RecvEvent mRecvEvent;
 };
 

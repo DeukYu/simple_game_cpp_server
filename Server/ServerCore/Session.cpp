@@ -4,6 +4,7 @@
 #include "Service.h"
 
 Session::Session()
+	: mRecvBuffer{}
 {
 	mSocket = SocketUtils::CreateSocket();
 }
@@ -13,6 +14,22 @@ Session::~Session()
 	SocketUtils::Close(mSocket);
 }
 
+void Session::Send(byte* buffer, int32 len)
+{
+	SendEvent* sendEvent = new SendEvent();
+	sendEvent->mOwner = shared_from_this();
+	sendEvent->mBuffer.resize(len);
+	memcpy(sendEvent->mBuffer.data(), buffer, len);
+	
+	unique_lock<shared_mutex> lock(mLock);
+	RegisterSend(sendEvent);
+}
+
+bool Session::Connect()
+{
+	return RegisterConnect();
+}
+
 void Session::DisConnect(string_view cause)
 {
 	if (mConnected.exchange(false) == false)
@@ -20,14 +37,13 @@ void Session::DisConnect(string_view cause)
 
 	cout << "DisConnect : " << cause << endl;
 
-	// Contents Code Overloading
+	// Contents Code OverRiding
 	OnDisconnect();
-
-	// Close Socket
-	SocketUtils::Close(mSocket);
 
 	// Release Session
 	GetService()->ReleaseSession(GetSession());
+
+	RegisterDisconnect();
 }
 
 HANDLE Session::GetHandle()
@@ -43,11 +59,14 @@ void Session::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 	case eEventType::Connect:
 		ProcessConnect();
 		break;
+	case eEventType::Disconnect:
+		ProcessDisconnect();
+		break;
 	case eEventType::Recv:
 		ProcessRecv(numOfBytes);
 		break;
 	case eEventType::Send:
-		ProcessSend(numOfBytes);
+		ProcessSend(static_cast<SendEvent*>(iocpEvent), numOfBytes);
 		break;
 	default:
 		break;
@@ -55,8 +74,56 @@ void Session::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 
 }
 
-void Session::RegisterConnect()
+bool Session::RegisterConnect()
 {
+	if (IsConnected())
+		return false;
+
+	if (GetService()->GetServiceType() != eServiceType::Client)
+		return false;
+
+	if (SocketUtils::SetReUseAddress(mSocket, true) == false)
+		return false;
+
+	if (SocketUtils::BindAnyAddress(mSocket, 0) == false)
+		return false;
+
+	mConnectEvent.Init();
+	mConnectEvent.mOwner = shared_from_this();
+
+	DWORD numOfBytes = 0;
+	SOCKADDR_IN sockAddr = GetService()->GetAddress().GetSockAddr();
+	if (false == SocketUtils::ConnectEx(mSocket, reinterpret_cast<SOCKADDR*>(&sockAddr),
+		sizeof(sockAddr), nullptr, 0, &numOfBytes, &mConnectEvent))
+	{
+		int32 errCode = WSAGetLastError();
+		if (errCode != WSA_IO_PENDING)
+		{
+			HandleError(errCode);
+			mConnectEvent.mOwner = nullptr;	// Release
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Session::RegisterDisconnect()
+{
+	mDisconnectEvent.Init();
+	mDisconnectEvent.mOwner = shared_from_this();
+
+	if (false == SocketUtils::DisconnectEx(mSocket, &mDisconnectEvent, TF_REUSE_SOCKET, 0))
+	{
+		int32 errCode = WSAGetLastError();
+		if (errCode != WSA_IO_PENDING)
+		{
+			HandleError(errCode);
+			mDisconnectEvent.mOwner = nullptr;	// Release
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void Session::RegisterRecv()
@@ -84,22 +151,49 @@ void Session::RegisterRecv()
 	}
 }
 
-void Session::RegisterSend()
+void Session::RegisterSend(SendEvent* sendEvent)
 {
+	if (IsConnected() == false)
+	{
+		return;
+	}
+
+	WSABUF wsaBuf;
+	wsaBuf.buf = reinterpret_cast<char*>(sendEvent->mBuffer.data());
+	wsaBuf.len = static_cast<ULONG>(sendEvent->mBuffer.size());
+
+	DWORD numOfBytes = 0;
+	if (SOCKET_ERROR == WSASend(mSocket, &wsaBuf, 1, OUT & numOfBytes, 0, sendEvent, nullptr))
+	{
+		int32 errCode = WSAGetLastError();
+		if (errCode != WSA_IO_PENDING)
+		{
+			HandleError(errCode);
+			sendEvent->mOwner = nullptr;	// Release
+			delete(sendEvent);
+		}
+	}
 }
 
 void Session::ProcessConnect()
 {
+	mConnectEvent.mOwner = nullptr;	// Release
+
 	mConnected.store(true);
 
 	// Register Session
 	GetService()->AddSession(GetSession());
 
-	// Contents Code Overloading
+	// Contents Code OverRiding
 	OnConnected();
 
 	// Register Recv
 	RegisterRecv();
+}
+
+void Session::ProcessDisconnect()
+{
+	mDisconnectEvent.mOwner = nullptr;	// Release
 }
 
 void Session::ProcessRecv(int32 numOfBytes)
@@ -112,15 +206,25 @@ void Session::ProcessRecv(int32 numOfBytes)
 		return;
 	}
 
-	// TODO
-	cout << "Recv : " << numOfBytes << endl;
+	OnRecv(mRecvBuffer, numOfBytes);
 
 	// Register Recv
 	RegisterRecv();
 }
 
-void Session::ProcessSend(int32 numOfBytes)
+void Session::ProcessSend(SendEvent* sendEvent, int32 numOfBytes)
 {
+	sendEvent->mOwner = nullptr;	// Release
+	delete(sendEvent);
+
+	if (numOfBytes == 0)
+	{
+		DisConnect("Send 0");
+		return;
+	}
+
+	// Contents Code OverRiding
+	OnSend(numOfBytes);
 }
 
 void Session::HandleError(int32 errCode)

@@ -32,7 +32,7 @@ public:
 	int32 GetMaxSessionCount() { return mMaxSessionCount; }
 
 public:
-	eServiceType GetType() { return mServiceType; }
+	eServiceType GetServiceType() { return mServiceType; }
 	NetAddress GetAddress() { return mAddress; }
 	shared_ptr<IocpCore>& GetIocpCore() { return mIocpCore; }
 
