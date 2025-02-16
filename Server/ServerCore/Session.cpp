@@ -4,7 +4,7 @@
 #include "Service.h"
 
 Session::Session()
-	: mRecvBuffer{}
+	: mRecvBuffer(BUFFER_SIZE)
 {
 	mSocket = SocketUtils::CreateSocket();
 }
@@ -135,8 +135,8 @@ void Session::RegisterRecv()
 	mRecvEvent.mOwner = shared_from_this();
 
 	WSABUF wsaBuf;
-	wsaBuf.buf = reinterpret_cast<char*>(mRecvBuffer);
-	wsaBuf.len = sizeof(mRecvBuffer);
+	wsaBuf.buf = reinterpret_cast<char*>(mRecvBuffer.WritePos());
+	wsaBuf.len = mRecvBuffer.FreeSize();
 
 	DWORD numOfBytes = 0;
 	DWORD flags = 0;
@@ -206,7 +206,22 @@ void Session::ProcessRecv(int32 numOfBytes)
 		return;
 	}
 
-	OnRecv(mRecvBuffer, numOfBytes);
+	if (mRecvBuffer.OnWrite(numOfBytes) == false)
+	{
+		DisConnect("Recv Buffer OverFlow");
+		return;
+	}
+
+	int32 dataSize = mRecvBuffer.DataSize();
+	int processLen = OnRecv(mRecvBuffer.ReadPos(), dataSize);
+	if (processLen < 0 || dataSize < processLen || mRecvBuffer.OnRead(processLen) == false)
+	{
+		DisConnect("Recv Process Error");
+		return;
+	}
+
+	// cusor Á¤¸®
+	mRecvBuffer.Clean();
 
 	// Register Recv
 	RegisterRecv();

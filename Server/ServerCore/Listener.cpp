@@ -95,7 +95,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 	acceptEvent->m_session = session;
 
 	DWORD bytesReceived = 0;
-	if (false == SocketUtils::AcceptEx(mSocket, session->GetSocket(), session->mRecvBuffer, 0,
+	if (false == SocketUtils::AcceptEx(mSocket, session->GetSocket(), session->mRecvBuffer.WritePos(), 0,
 		sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16,
 		OUT & bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
