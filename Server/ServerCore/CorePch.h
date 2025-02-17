@@ -28,3 +28,4 @@ using namespace std;
 
 #include "ObjectPool.h"
 #include "TypeCast.h"
+#include "SendBuffer.h"

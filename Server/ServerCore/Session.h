@@ -21,7 +21,7 @@ public:
 	virtual ~Session();
 
 public: /* 외부에서 사용 */
-	void Send(byte* buffer, int32 len);
+	void Send(shared_ptr<SendBuffer> sendBuffer);
 	bool Connect();
 	void DisConnect(string_view cause);
 
@@ -43,12 +43,12 @@ private: /* 전송 관련 */
 	bool RegisterConnect();
 	bool RegisterDisconnect();
 	void RegisterRecv();
-	void RegisterSend(SendEvent* sendEvent);
+	void RegisterSend();
 
 	void ProcessConnect();
 	void ProcessDisconnect();
 	void ProcessRecv(int32 numOfBytes);
-	void ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
+	void ProcessSend(int32 numOfBytes);
 
 	void HandleError(int32 errCode);
 
@@ -70,9 +70,13 @@ private:
 private:	/* 수신 관련 */
 	RecvBuffer mRecvBuffer;
 
+	queue<shared_ptr<SendBuffer>> mSendQueue;
+	atomic<bool>				mSendRegistered = false;	
+
 private:
 	ConnectEvent mConnectEvent;
 	DisconnectEvent mDisconnectEvent;
 	RecvEvent mRecvEvent;
+	SendEvent mSendEvent;
 };
 

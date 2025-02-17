@@ -56,5 +56,5 @@ class SendEvent : public IocpEvent
 public:
 	SendEvent() : IocpEvent(eEventType::Send) {}
 
-	vector<byte> mBuffer;
+	vector<shared_ptr<SendBuffer>> mSendBuffers;
 };
