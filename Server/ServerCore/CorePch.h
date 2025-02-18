@@ -13,11 +13,13 @@
 #include <stack>
 #include <unordered_set>
 #include <unordered_map>
+#include <concurrent_queue.h>
 #include <optional>
 #include <memory_resource>
 
 #include <iostream>
 using namespace std;
+using namespace Concurrency;
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN

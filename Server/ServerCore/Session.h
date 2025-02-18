@@ -64,13 +64,10 @@ private:
 	NetAddress mNetAddress = {};
 	atomic<bool> mConnected = false;
 
-private:
-	shared_mutex mLock;
-
 private:	/* 수신 관련 */
 	RecvBuffer mRecvBuffer;
 
-	queue<shared_ptr<SendBuffer>> mSendQueue;
+	concurrent_queue<shared_ptr<SendBuffer>> mSendQueue;
 	atomic<bool>				mSendRegistered = false;	
 
 private:

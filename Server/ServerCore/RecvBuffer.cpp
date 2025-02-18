@@ -2,20 +2,14 @@
 #include "RecvBuffer.h"
 
 RecvBuffer::RecvBuffer(int32 bufferSize)
-	: mBufferSize(bufferSize)
+	:mCapacity(bufferSize* BUFFER_COUNT), mBufferSize(bufferSize)
 {
-	mCapacity = bufferSize * BUFFER_COUNT;
 	mBuffer.resize(mCapacity);
-}
-
-RecvBuffer::~RecvBuffer()
-{
 }
 
 void RecvBuffer::Clean()
 {
-	int32 dataSize = DataSize();
-	if (dataSize == 0)
+	if (int32 dataSize = DataSize(); dataSize == 0)
 	{
 		mReadPos = 0;
 		mWritePos = 0;

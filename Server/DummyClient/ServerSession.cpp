@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ServerSession.h"
-#include "ServerSessionManager.h"
+
+char sendData[] = "Hello World";
 
 ServerSession::~ServerSession()
 {
@@ -9,24 +10,27 @@ ServerSession::~ServerSession()
 
 void ServerSession::OnConnected()
 {
-	GServerSessionManager.Add(static_pointer_cast<ServerSession>(shared_from_this()));
+	cout << "OnConnected" << endl;
+
+	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
+	sendBuffer->CopyData(sendData, sizeof(sendData));
+	Send(sendBuffer);
 }
 
 void ServerSession::OnDisconnect()
 {
-	GServerSessionManager.Remove(static_pointer_cast<ServerSession>(shared_from_this()));
+	cout << "OnDisconnect" << endl;
 }
 
 int32 ServerSession::OnRecv(byte* buffer, int32 len)
 {
 	cout << "OnRecv Len = " << len << endl;
 
+	this_thread::sleep_for(1s);
+
 	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-	sendBuffer->CopyData(buffer, len);
+	sendBuffer->CopyData(sendData, sizeof(sendData));
 	Send(sendBuffer);
-
-	GServerSessionManager.Broadcast(sendBuffer);
-
 	return len;
 }
 

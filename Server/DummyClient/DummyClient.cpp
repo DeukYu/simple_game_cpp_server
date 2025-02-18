@@ -1,50 +1,9 @@
 ﻿#include "pch.h"
 
-#include "Session.h"
-#include "ClientService.h"
 #include "ThreadManager.h"
+#include "ClientService.h"
+#include "ServerSession.h"
 
-char sendData[] = "Hello World";
-
-class ServerSession : public Session
-{
-public:
-	~ServerSession()
-	{
-		cout << "~ServerSession" << endl;
-	}
-
-	virtual void OnConnected() override
-	{
-		cout << "OnConnected" << endl;
-
-		shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-		sendBuffer->CopyData(sendData, sizeof(sendData));
-		Send(sendBuffer);
-	}
-
-	virtual void OnDisconnect() override
-	{
-		cout << "OnDisconnect" << endl;
-	}
-
-	virtual int32 OnRecv(byte* buffer, int32 len) override
-	{
-		cout << "OnRecv Len = " << len << endl;
-
-		this_thread::sleep_for(1s);
-
-		shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-		sendBuffer->CopyData(sendData, sizeof(sendData));
-		Send(sendBuffer);
-		return len;
-	}
-
-	virtual void OnSend(int32 len) override
-	{
-		cout << "OnSend Len = " << len << endl;
-	}
-};
 
 int main()
 {

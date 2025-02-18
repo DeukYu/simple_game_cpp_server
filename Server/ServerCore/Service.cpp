@@ -31,14 +31,14 @@ shared_ptr<Session> Service::CreateSession()
 
 void Service::AddSession(shared_ptr<Session> session)
 {
-	unique_lock<shared_mutex> lock(mLock);
+	unique_lock<mutex> lock(mLock);
 	mSessionCount++;
 	mSessions.insert(session);
 }
 
 void Service::ReleaseSession(shared_ptr<Session> session)
 {
-	unique_lock<shared_mutex> lock(mLock);
+	unique_lock<mutex> lock(mLock);
 	
 	mSessions.erase(session);
 	mSessionCount--;

@@ -16,8 +16,6 @@ Session::~Session()
 
 void Session::Send(shared_ptr<SendBuffer> sendBuffer)
 {
-	unique_lock<shared_mutex> lock(mLock);
-
 	mSendQueue.push(sendBuffer);
 
 	if (mSendRegistered.exchange(true) == false)
@@ -164,17 +162,16 @@ void Session::RegisterSend()
 
 	// 보낼 데이터를 sendEvent에 등록
 	{
-		unique_lock<shared_mutex> lock(mLock);
-
 		int32 writeSize = 0;
 		while (mSendQueue.empty() == false)
 		{
-			shared_ptr<SendBuffer> sendBuffer = mSendQueue.front();
-			writeSize += sendBuffer->WritePos();
 
+			if (shared_ptr<SendBuffer> sendBuffer; mSendQueue.try_pop(sendBuffer))
+			{
+				writeSize += sendBuffer->WritePos();
+				mSendEvent.mSendBuffers.push_back(sendBuffer);
+			}
 
-			mSendQueue.pop();
-			mSendEvent.mSendBuffers.push_back(sendBuffer);
 		}
 	}
 
@@ -269,7 +266,6 @@ void Session::ProcessSend(int32 numOfBytes)
 	// Contents Code OverRiding
 	OnSend(numOfBytes);
 
-	unique_lock<shared_mutex> lock(mLock);
 	if (mSendQueue.empty())
 		mSendRegistered.store(false);
 	else

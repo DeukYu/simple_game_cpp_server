@@ -9,22 +9,22 @@ class RecvBuffer
 	};
 
 public:
-	RecvBuffer(int32 bufferSize);
-	~RecvBuffer();
+	explicit RecvBuffer(int32 bufferSize);
+	~RecvBuffer() = default;
 
 	void Clean();
 	bool OnRead(int32 numOfBytes);
 	bool OnWrite(int32 numOfBytes);
 
-	byte* ReadPos() { return &mBuffer[mReadPos]; }
-	byte* WritePos() { return &mBuffer[mWritePos]; }
-	int32 DataSize() { return mWritePos - mReadPos; }
-	int32 FreeSize() { return mCapacity - mWritePos; }
+	[[nodiscard]] byte* ReadPos() { return &mBuffer[mReadPos]; }
+	[[nodiscard]] byte* WritePos() { return &mBuffer[mWritePos]; }
+	[[nodiscard]] int32 DataSize() const { return mWritePos - mReadPos; }
+	[[nodiscard]] int32 FreeSize() const { return mCapacity - mWritePos; }
 
 
 private:
-	int32 mCapacity = 0;
-	int32 mBufferSize = 0;
+	const int32 mCapacity;
+	const int32 mBufferSize;
 	int32 mReadPos = 0;
 	int32 mWritePos = 0;
 	vector<byte> mBuffer;

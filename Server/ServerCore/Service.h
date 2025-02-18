@@ -38,7 +38,7 @@ public:
 
 
 protected:
-	shared_mutex mLock;
+	mutex mLock;
 	eServiceType mServiceType;
 	NetAddress mAddress = {};
 	shared_ptr<IocpCore> mIocpCore;
