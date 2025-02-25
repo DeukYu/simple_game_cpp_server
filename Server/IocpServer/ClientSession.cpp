@@ -21,8 +21,9 @@ int32 ClientSession::OnRecv(byte* buffer, int32 len)
 {
 	cout << "OnRecv Len = " << len << endl;
 
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-	sendBuffer->CopyData(buffer, len);
+	shared_ptr<SendBuffer> sendBuffer = GSendBufferManager->Open(4096);
+	::memcpy(sendBuffer->Buffer(), buffer, len);
+	sendBuffer->Close(len);
 	Send(sendBuffer);
 
 	GServerSessionManager.Broadcast(sendBuffer);

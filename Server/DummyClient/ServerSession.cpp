@@ -12,8 +12,9 @@ void ServerSession::OnConnected()
 {
 	cout << "OnConnected" << endl;
 
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-	sendBuffer->CopyData(sendData, sizeof(sendData));
+	shared_ptr<SendBuffer> sendBuffer = GSendBufferManager->Open(4096);
+	::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+	sendBuffer->Close(sizeof(sendData));
 	Send(sendBuffer);
 }
 
@@ -28,8 +29,9 @@ int32 ServerSession::OnRecv(byte* buffer, int32 len)
 
 	this_thread::sleep_for(1s);
 
-	shared_ptr<SendBuffer> sendBuffer = make_shared<SendBuffer>(4096);
-	sendBuffer->CopyData(sendData, sizeof(sendData));
+	shared_ptr<SendBuffer> sendBuffer = GSendBufferManager->Open(4096);
+	::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+	sendBuffer->Close(sizeof(sendData));
 	Send(sendBuffer);
 	return len;
 }

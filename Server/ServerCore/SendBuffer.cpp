@@ -1,20 +1,23 @@
 #include "pch.h"
 #include "SendBuffer.h"
 
-SendBuffer::SendBuffer(int32 bufferSize)
+SendBuffer::SendBuffer(shared_ptr<SendBufferChunk> owner, byte* buffer, int32 allocSize)
+	: mOwner(owner)	, mBuffer(buffer)	, mAllocSize(allocSize)
 {
-	mBuffer.resize(bufferSize);
 }
 
 SendBuffer::~SendBuffer()
 {
 }
 
-void SendBuffer::CopyData(void* data, int32 len)
+void SendBuffer::Close(uint32 writeSize)
 {
-	if (Capacity() < len)
+	if (mAllocSize < writeSize)
+	{
+		// error
 		return;
+	}
 
-	memcpy(mBuffer.data(), data, len);
-	mWritePos = len;
+	mWritePos = writeSize;
+	mOwner->Close(writeSize);
 }

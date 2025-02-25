@@ -6,17 +6,15 @@
 class ThreadManager
 {
 public:
-	ThreadManager();
-	~ThreadManager();
+	ThreadManager() = default;
+	~ThreadManager() = default;
 
 	void Launch(function<void(void)> callback);
-	void Join();
 
 	static void InitTLS();
 	static void DestroyTLS();
 
 private:
-	mutex	_lock;
-	vector<jthread> _threads;
+	concurrent_vector<jthread> mThreads;
 };
 

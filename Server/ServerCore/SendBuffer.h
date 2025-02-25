@@ -1,19 +1,21 @@
 #pragma once
+
+class SendBufferChunk;
+
 class SendBuffer
 {
 public:
-	SendBuffer(int32 bufferSize);
+	SendBuffer(shared_ptr<SendBufferChunk> owner, byte* buffer, int32 allocSize);
 	~SendBuffer();
 
-	byte* Buffer() { return mBuffer.data(); }
-	int32 WritePos() { return mWritePos; }
-	int32 Capacity() { return static_cast<int32>(mBuffer.size()); }
-
-	void CopyData(void* data, int32 len);
+	byte*	Buffer() { return mBuffer; }
+	int32	WritePos() { return mWritePos; }
+	void	Close(uint32 writeSize);
 
 
 private:
-	vector<byte> mBuffer;
-	int32 mWritePos = 0;
+	byte* mBuffer;
+	uint32 mAllocSize = 0;
+	uint32 mWritePos = 0;
+	shared_ptr<SendBufferChunk> mOwner;
 };
-

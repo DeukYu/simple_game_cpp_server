@@ -5,6 +5,7 @@
 #include "CoreTLS.h"
 #include "CoreGlobal.h"
 
+#include <array>
 #include <vector>
 #include <list>
 #include <set>
@@ -14,6 +15,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <concurrent_queue.h>
+#include <concurrent_vector.h>
 #include <optional>
 #include <memory_resource>
 
@@ -31,3 +33,5 @@ using namespace Concurrency;
 #include "ObjectPool.h"
 #include "TypeCast.h"
 #include "SendBuffer.h"
+#include "SendBufferChunk.h"
+#include "SendBufferManager.h"

@@ -19,7 +19,7 @@ void ServerSessionManager::Remove(shared_ptr<ClientSession> session)
 
 void ServerSessionManager::Broadcast(shared_ptr<SendBuffer> sendBuffer)
 {
-	shared_lock(mLock);
+	shared_lock lock(mLock);
 	for (auto session : mSessions)
 	{
 		session->Send(sendBuffer);
