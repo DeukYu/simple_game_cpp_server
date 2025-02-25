@@ -9,7 +9,7 @@ shared_ptr<SendBuffer> SendBufferManager::Open(int32 size)
 		LSendBufferChunk->Reset();
 	}
 
-	if (LSendBufferChunk->IsOpen() == false)
+	if (LSendBufferChunk->IsOpen())
 	{
 		// error
 		return nullptr;
